@@ -89,8 +89,18 @@ function fromBech32(address) {
   };
 }
 
+function getScriptPubKey(address, network) {
+    const { data } = bitcoin.address.fromBech32(address); // Decode Bech32
+    const scriptPubKey = bitcoin.script.compile([bitcoin.opcodes.OP_0, data]); // OP_0 <HASH>
+
+    console.log('🚀 scriptPubKey (Hex):', scriptPubKey.toString('hex'));
+    return scriptPubKey;
+}
+
 function createTransaction(senderScript, utxo, recipientAddress, sendAmount) {
     psbt = new bitcoin.Psbt({ NETWORK });
+    psbt.setVersion(2);
+    psbt.setLocktime(0);
     psbt.addInput({
         hash: utxo.txId,
         index: utxo.vout,
@@ -102,7 +112,7 @@ function createTransaction(senderScript, utxo, recipientAddress, sendAmount) {
     
 
     psbt.addOutput({
-        script: Buffer.from(recipientAddress, 'hex'),
+        script: getScriptPubKey(recipientAddress, NETWORK),
         value: sendAmount,
     });
     return psbt;
