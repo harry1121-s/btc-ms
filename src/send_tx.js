@@ -19,7 +19,6 @@ async function test_send() {
     console.log("senderScript: ", senderScript);
 
     const utxo = await fetchUTXO(senderAddress);
-    console.log(utxo)
     
     const receiverAddress = 'tb1qa5y6kx2rmy7jhhddp5cp92mvkxl0mj5lwegner';
     fee = 150;
@@ -28,6 +27,7 @@ async function test_send() {
     psbt = createTransaction(senderScript, utxo, fee, receiverAddress, sendAmount);
 
     console.log(psbt);
+    return
     psbt.signInput(0, {
         publicKey: Buffer.from(keyPair.publicKey),
         sign: (hash) => {
@@ -52,6 +52,7 @@ function createTransaction(senderScript, utxo, fee, recipientAddress, sendAmount
     psbt = new bitcoin.Psbt({ NETWORK });
     psbt.setVersion(2);
     psbt.setLocktime(0);
+    console.log(utxo)
     psbt.addInput({
         hash: utxo.txId,
         index: utxo.vout,
