@@ -19,13 +19,31 @@ async function test_user() {
     // console.log(userInfo);
     // console.log(userInfo.txrefs[0].tx_hash);
     // const tx_ref = userInfo.txrefs
-    txInfo = await fetch_tx_info(userInfo.txrefs[0].tx_hash);
-    console.log(txInfo);
+    // txInfo = await fetch_tx_info(userInfo.unconfirmed_txrefs[0]);
+    // console.log(txInfo); 
+
+    fetchUTXO(address);
+
+    //testnetFee Estimate
+    // console.log(await fetch_feeEstimate());
 };
+
+async function fetch_feeEstimate() {
+    try {
+        const url = `https://blockstream.info/testnet/api/fee-estimates`;
+        const response = await axios.get(url);
+        
+        if (response.data) {
+            return response.data; // Balance in satoshis
+        }
+    } catch (error) {
+        console.error("Error fetching information:", error.response ? error.response.data : error.message);
+    }
+}
 
 async function fetch_user_info(address) {
     try {
-        const url = `https://api.blockcypher.com/v1/btc/test3/addrs/${address}?unspentOnly=true?includeScript=true`;
+        const url = `https://blockstream.info/testnet/api/address/${address}`;
         const response = await axios.get(url);
         
         if (response.data) {
@@ -46,6 +64,24 @@ async function fetch_tx_info(tx_hash) {
         }
     } catch (error) {
         console.error("Error fetching information:", error.response ? error.response.data : error.message);
+    }
+}
+async function fetchUTXO(address) {
+    try {
+        const response = await axios.get(`https://blockstream.info/testnet/api/address/${address}/utxo`);
+        if (!response.data.length) throw new Error("No UTXOs found for this address.");
+
+        // ✅ Select the first available UTXO
+        const utxo = response.data[0];  
+
+        return {
+            txId: utxo.txid,
+            vout: utxo.vout,
+            value: utxo.value
+        };
+    } catch (error) {
+        console.error('❌ Error fetching UTXO:', error.message);
+        process.exit(1);
     }
 }
 
