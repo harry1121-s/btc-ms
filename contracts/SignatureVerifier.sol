@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "hardhat/console.sol";
 
 contract BitcoinSignatureVerifier {
     // Prefix for Bitcoin message signing
-    bytes constant PREFIX = "\x18Bitcoin Signed Message:\n32";
+    // bytes constant PREFIX = "\x18Bitcoin Signed Message:\n32";
     
     /**
      * @dev Verifies a Bitcoin-style ECDSA signature
@@ -17,6 +18,10 @@ contract BitcoinSignatureVerifier {
         bytes memory signature,
         bytes memory expectedSigner
     ) public pure returns (bool) {
+        console.logBytes32(messageHash);
+        console.logBytes(signature);
+        console.logBytes(expectedSigner);
+        
         require(signature.length == 65, "Invalid signature length");
         require(expectedSigner.length == 33 || expectedSigner.length == 65, "Invalid public key length");
 
@@ -31,24 +36,34 @@ contract BitcoinSignatureVerifier {
             v := byte(0, mload(add(signature, 96)))
         }
 
+        console.logBytes32(r);
+        console.logBytes32(s);
+        console.log("v value:", v);
+
         // Adjust v for Ethereum's ecrecover
         // Bitcoin uses 27/28 as v values, Ethereum uses 0/1
         if (v < 27) {
             v += 27;
         }
+        console.log("adjusted v value:", v);
 
         // Prefix the message hash as per Bitcoin's standard
-        bytes32 prefixedHash = keccak256(abi.encodePacked(PREFIX, messageHash));
+        bytes32 prefixedHash = keccak256(abi.encodePacked(messageHash));
+        console.logBytes32(prefixedHash);
         
         // Recover the signer's address
         address recovered = ecrecover(prefixedHash, v, r, s);
-        require(recovered != address(0), "Invalid signature");
+        console.log("recovered address:", recovered);
         
         // Convert the recovered address to a public key
         bytes memory recoveredPubKey = abi.encodePacked(recovered);
+        console.logBytes(recoveredPubKey);
         
         // Compare the recovered public key with the expected signer
-        return keccak256(recoveredPubKey) == keccak256(expectedSigner);
+        bool isValid = keccak256(recoveredPubKey) == keccak256(expectedSigner);
+        console.log("signature valid:", isValid);
+        
+        return isValid;
     }
 
     /**
