@@ -132,3 +132,5 @@ dist
 .env
 
 package-lock.json
+artifacts/
+cache/

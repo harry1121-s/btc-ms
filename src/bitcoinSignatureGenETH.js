@@ -46,6 +46,12 @@ function signMessageForEthereum(messageHash, keyPair) {
     // Concatenate r, s, v into a single 65-byte signature
     const ethSignature = Buffer.concat([r, s, Buffer.from([v])]);
     
+    // Convert public key to proper hex format
+    const publicKeyArray = Array.from(keyPair.publicKey);
+    const cleanPublicKey = publicKeyArray
+        .map(num => num.toString(16).padStart(2, '0'))
+        .join('');
+    
     return {
         signature: ethSignature,
         publicKey: keyPair.publicKey,
@@ -53,7 +59,7 @@ function signMessageForEthereum(messageHash, keyPair) {
         // Add hex strings for easy use with web3
         signatureHex: '0x' + ethSignature.toString('hex'),
         messageHashHex: '0x' + messageHash.toString('hex'),
-        publicKeyHex: '0x' + keyPair.publicKey.toString('hex')
+        publicKeyHex: '0x' + cleanPublicKey
     };
 }
 
